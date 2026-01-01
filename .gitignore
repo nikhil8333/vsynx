@@ -1,0 +1,42 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Build output (keep build/ assets like icons, ignore only bin/)
+build/bin/
+/bin/
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/package.json.md5
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.code-workspace
+
+# Wails
+wails.json.lock
+frontend/src/wailsjs/
+
+# OS
+Thumbs.db
+
+# Secrets / env files (safety net)
+.env
+.env.*
+*.pem
+*.key
+!*.pub

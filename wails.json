@@ -1,0 +1,23 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Vsynx Manager",
+  "outputfilename": "vsynx-manager",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Vsynx Team",
+    "email": "info@vsynx.dev"
+  },
+  "info": {
+    "companyName": "Vsynx",
+    "productName": "Vsynx Manager",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright © 2024 Vsynx Team",
+    "comments": "Secure VS Code extension manager"
+  },
+  "wailsjsdir": "./frontend/src",
+  "version": "2",
+  "outputType": "desktop"
+}
