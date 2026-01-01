@@ -40,6 +40,12 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Generate Wails bindings
+        run: wails generate module
+
       - name: Build frontend (required for go:embed)
         run: npm ci && npm run build
         working-directory: frontend
@@ -70,6 +76,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Generate Wails bindings
+        run: wails generate module
 
       - name: Build frontend (required for go:embed)
         run: npm ci && npm run build
