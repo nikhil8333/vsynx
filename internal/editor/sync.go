@@ -143,7 +143,7 @@ func syncToTarget(sourceProfile models.EditorProfile, sourceIndex []models.Exten
 	if len(entriesToAdd) > 0 {
 		// Merge with existing entries
 		newIndex := make([]models.ExtensionIndexEntry, 0, len(targetIndex)+len(entriesToAdd))
-		
+
 		// Add existing entries (excluding overwritten ones)
 		for _, entry := range targetIndex {
 			entryID := strings.ToLower(entry.Identifier.ID)
@@ -158,7 +158,7 @@ func syncToTarget(sourceProfile models.EditorProfile, sourceIndex []models.Exten
 				newIndex = append(newIndex, entry)
 			}
 		}
-		
+
 		// Add new entries
 		newIndex = append(newIndex, entriesToAdd...)
 

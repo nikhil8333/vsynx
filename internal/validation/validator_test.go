@@ -257,7 +257,7 @@ func TestValidateExtensionStructure(t *testing.T) {
 
 	// This will fail to connect to real APIs, but tests the structure
 	result, err := validator.ValidateExtension("test.extension")
-	
+
 	if err != nil {
 		t.Errorf("ValidateExtension should not return error, got: %v", err)
 	}

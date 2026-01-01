@@ -19,7 +19,7 @@ Classifies the extension as Legitimate, Suspicious, or Malicious.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		extensionID := args[0]
-		
+
 		validator := validation.NewValidator()
 		result, err := validator.ValidateExtension(extensionID)
 		if err != nil {
@@ -47,7 +47,7 @@ func init() {
 
 func printValidationResult(result *models.ValidationResult) {
 	fmt.Printf("\n=== Extension Validation: %s ===\n\n", result.ExtensionID)
-	
+
 	// Trust level with color
 	trustColor := getTrustColor(result.TrustLevel)
 	fmt.Printf("Trust Level: %s%s%s\n\n", trustColor, result.TrustLevel, colorReset)

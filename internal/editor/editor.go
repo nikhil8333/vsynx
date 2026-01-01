@@ -215,7 +215,7 @@ func ReadExtensionsIndex(extensionsDir string) ([]models.ExtensionIndexEntry, er
 // WriteExtensionsIndex writes the extensions.json file
 func WriteExtensionsIndex(extensionsDir string, entries []models.ExtensionIndexEntry) error {
 	indexPath := filepath.Join(extensionsDir, "extensions.json")
-	
+
 	data, err := json.MarshalIndent(entries, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal extensions index: %w", err)

@@ -177,10 +177,10 @@ var syncPreviewCmd = &cobra.Command{
 		}
 
 		type PreviewResult struct {
-			Target     string   `json:"target"`
-			NewCount   int      `json:"newCount"`
-			Conflicts  []string `json:"conflicts"`
-			Overwrite  int      `json:"overwriteCount"`
+			Target    string   `json:"target"`
+			NewCount  int      `json:"newCount"`
+			Conflicts []string `json:"conflicts"`
+			Overwrite int      `json:"overwriteCount"`
 		}
 
 		var results []PreviewResult

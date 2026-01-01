@@ -103,7 +103,7 @@ func (v *Validator) compareMetadata(result *models.ValidationResult, marketplace
 			differences = append(differences, "✓ SHA256 hashes match")
 		} else {
 			result.SHAMatch = false
-			result.SHAMismatchDetails = fmt.Sprintf("Marketplace: %s, OpenVSX: %s", 
+			result.SHAMismatchDetails = fmt.Sprintf("Marketplace: %s, OpenVSX: %s",
 				marketplace.SHA256Hash[:16]+"...", openvsx.SHA256Hash[:16]+"...")
 			differences = append(differences, "⚠ SHA256 hash mismatch - binaries are different!")
 		}
@@ -114,26 +114,26 @@ func (v *Validator) compareMetadata(result *models.ValidationResult, marketplace
 
 	// Compare publisher
 	if !strings.EqualFold(marketplace.Publisher, openvsx.Publisher) {
-		differences = append(differences, fmt.Sprintf("Publisher mismatch: %s (marketplace) vs %s (OpenVSX)", 
+		differences = append(differences, fmt.Sprintf("Publisher mismatch: %s (marketplace) vs %s (OpenVSX)",
 			marketplace.Publisher, openvsx.Publisher))
 	}
 
 	// Compare name
 	if !strings.EqualFold(marketplace.Name, openvsx.Name) {
-		differences = append(differences, fmt.Sprintf("Extension name mismatch: %s (marketplace) vs %s (OpenVSX)", 
+		differences = append(differences, fmt.Sprintf("Extension name mismatch: %s (marketplace) vs %s (OpenVSX)",
 			marketplace.Name, openvsx.Name))
 	}
 
 	// Compare version
 	if marketplace.Version != openvsx.Version {
-		differences = append(differences, fmt.Sprintf("Version mismatch: %s (marketplace) vs %s (OpenVSX)", 
+		differences = append(differences, fmt.Sprintf("Version mismatch: %s (marketplace) vs %s (OpenVSX)",
 			marketplace.Version, openvsx.Version))
 	}
 
 	// Compare repository URL
 	if marketplace.RepositoryURL != "" && openvsx.RepositoryURL != "" {
 		if !strings.EqualFold(normalizeURL(marketplace.RepositoryURL), normalizeURL(openvsx.RepositoryURL)) {
-			differences = append(differences, fmt.Sprintf("Repository URL mismatch: %s (marketplace) vs %s (OpenVSX)", 
+			differences = append(differences, fmt.Sprintf("Repository URL mismatch: %s (marketplace) vs %s (OpenVSX)",
 				marketplace.RepositoryURL, openvsx.RepositoryURL))
 		}
 	}

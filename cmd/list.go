@@ -17,7 +17,7 @@ var listCmd = &cobra.Command{
 	Long:  `Lists all installed VS Code extensions without performing validation.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		scanner := validation.NewScanner()
-		
+
 		extensions, err := scanner.ScanInstalledExtensions(extensionsPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error scanning extensions: %v\n", err)
@@ -39,7 +39,7 @@ func init() {
 
 func printExtensionsList(extensions []models.InstalledExtension) {
 	fmt.Printf("\n=== Installed Extensions (%d) ===\n\n", len(extensions))
-	
+
 	if len(extensions) == 0 {
 		fmt.Println("No extensions found.")
 		return
@@ -56,6 +56,6 @@ func printExtensionsList(extensions []models.InstalledExtension) {
 		}
 		fmt.Printf("%-40s %-15s %-10s\n", ext.ID, ext.Version, status)
 	}
-	
+
 	fmt.Println()
 }
