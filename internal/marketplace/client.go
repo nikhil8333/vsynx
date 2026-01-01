@@ -52,21 +52,21 @@ type marketplaceResponse struct {
 	Results []struct {
 		Extensions []struct {
 			Publisher struct {
-				PublisherName string `json:"publisherName"`
-				PublisherID   string `json:"publisherId"`
-				Domain        string `json:"domain"`
-				IsDomainVerified bool `json:"isDomainVerified"`
-				Flags         string `json:"flags"`
+				PublisherName    string `json:"publisherName"`
+				PublisherID      string `json:"publisherId"`
+				Domain           string `json:"domain"`
+				IsDomainVerified bool   `json:"isDomainVerified"`
+				Flags            string `json:"flags"`
 			} `json:"publisher"`
-			ExtensionName string `json:"extensionName"`
-			DisplayName   string `json:"displayName"`
+			ExtensionName    string `json:"extensionName"`
+			DisplayName      string `json:"displayName"`
 			ShortDescription string `json:"shortDescription"`
-			Flags         string `json:"flags"`
-			Versions      []struct {
-				Version      string `json:"version"`
-				LastUpdated  string `json:"lastUpdated"`
-				Flags        string `json:"flags"`
-				Files        []struct {
+			Flags            string `json:"flags"`
+			Versions         []struct {
+				Version     string `json:"version"`
+				LastUpdated string `json:"lastUpdated"`
+				Flags       string `json:"flags"`
+				Files       []struct {
 					AssetType string `json:"assetType"`
 					Source    string `json:"source"`
 				} `json:"files"`
@@ -82,7 +82,7 @@ type marketplaceResponse struct {
 // SearchExtensions searches for extensions using keywords or partial names
 func (c *Client) SearchExtensions(searchTerm string) ([]*models.ExtensionMetadata, error) {
 	log.Printf("[Marketplace] Searching for extensions matching: %s", searchTerm)
-	
+
 	// Use FilterType 10 for text search (supports keywords/wildcards)
 	query := marketplaceQuery{
 		Filters: []filter{
@@ -141,16 +141,16 @@ func (c *Client) SearchExtensions(searchTerm string) ([]*models.ExtensionMetadat
 		if len(ext.Versions) == 0 {
 			continue
 		}
-		
+
 		latestVersion := ext.Versions[0]
 		var downloadURL, repoURL string
-		
+
 		for _, file := range latestVersion.Files {
 			if file.AssetType == "Microsoft.VisualStudio.Services.VSIXPackage" {
 				downloadURL = file.Source
 			}
 		}
-		
+
 		for _, prop := range latestVersion.Properties {
 			if prop.Key == "Microsoft.VisualStudio.Services.Links.Source" ||
 				prop.Key == "Microsoft.VisualStudio.Services.Links.Repository" {
@@ -242,7 +242,7 @@ func (c *Client) FetchMetadata(extensionID string) (*models.ExtensionMetadata, e
 	}
 
 	latestVersion := ext.Versions[0]
-	
+
 	// Extract download URL and repository URL
 	var downloadURL, repoURL string
 	for _, file := range latestVersion.Files {
@@ -250,7 +250,7 @@ func (c *Client) FetchMetadata(extensionID string) (*models.ExtensionMetadata, e
 			downloadURL = file.Source
 		}
 	}
-	
+
 	for _, prop := range latestVersion.Properties {
 		if prop.Key == "Microsoft.VisualStudio.Services.Links.Source" ||
 			prop.Key == "Microsoft.VisualStudio.Services.Links.Repository" {

@@ -4,44 +4,44 @@ package models
 type EditorType string
 
 const (
-	EditorVSCode        EditorType = "vscode"
+	EditorVSCode         EditorType = "vscode"
 	EditorVSCodeInsiders EditorType = "vscode-insiders"
-	EditorVSCodium      EditorType = "vscodium"
-	EditorWindsurf      EditorType = "windsurf"
-	EditorCursor        EditorType = "cursor"
-	EditorKiro          EditorType = "kiro"
-	EditorCustom        EditorType = "custom"
+	EditorVSCodium       EditorType = "vscodium"
+	EditorWindsurf       EditorType = "windsurf"
+	EditorCursor         EditorType = "cursor"
+	EditorKiro           EditorType = "kiro"
+	EditorCustom         EditorType = "custom"
 )
 
 // EditorProfile represents a code editor with its configuration
 type EditorProfile struct {
-	ID            EditorType `json:"id"`
-	Name          string     `json:"name"`
-	ExtensionsDir string     `json:"extensionsDir"`
-	IndexFile     string     `json:"indexFile"`
-	CLICommand    string     `json:"cliCommand,omitempty"`
-	IsVSCodeFamily bool      `json:"isVSCodeFamily"`
-	IsCustom      bool       `json:"isCustom"`
+	ID             EditorType `json:"id"`
+	Name           string     `json:"name"`
+	ExtensionsDir  string     `json:"extensionsDir"`
+	IndexFile      string     `json:"indexFile"`
+	CLICommand     string     `json:"cliCommand,omitempty"`
+	IsVSCodeFamily bool       `json:"isVSCodeFamily"`
+	IsCustom       bool       `json:"isCustom"`
 }
 
 // EditorStatus represents the status/availability of an editor
 type EditorStatus struct {
-	Editor           EditorProfile `json:"editor"`
-	DirExists        bool          `json:"dirExists"`
-	IndexFileExists  bool          `json:"indexFileExists"`
-	CLIAvailable     bool          `json:"cliAvailable"`
-	CLIPath          string        `json:"cliPath,omitempty"`
-	ExtensionCount   int           `json:"extensionCount"`
-	DisabledReason   string        `json:"disabledReason,omitempty"`
-	IsAvailable      bool          `json:"isAvailable"`
+	Editor          EditorProfile `json:"editor"`
+	DirExists       bool          `json:"dirExists"`
+	IndexFileExists bool          `json:"indexFileExists"`
+	CLIAvailable    bool          `json:"cliAvailable"`
+	CLIPath         string        `json:"cliPath,omitempty"`
+	ExtensionCount  int           `json:"extensionCount"`
+	DisabledReason  string        `json:"disabledReason,omitempty"`
+	IsAvailable     bool          `json:"isAvailable"`
 }
 
 // SyncRequest represents a request to sync extensions between editors
 type SyncRequest struct {
-	SourceEditor     EditorType   `json:"sourceEditor"`
-	TargetEditors    []EditorType `json:"targetEditors"`
-	ExtensionIDs     []string     `json:"extensionIds"`
-	OverwriteConflicts bool       `json:"overwriteConflicts"`
+	SourceEditor       EditorType   `json:"sourceEditor"`
+	TargetEditors      []EditorType `json:"targetEditors"`
+	ExtensionIDs       []string     `json:"extensionIds"`
+	OverwriteConflicts bool         `json:"overwriteConflicts"`
 }
 
 // SyncResult represents the result of syncing to a single target editor
@@ -67,14 +67,14 @@ type SyncReport struct {
 
 // CLIStatus represents the status of VS Code family CLI tools
 type CLIStatus struct {
-	VSCodeAvailable     bool   `json:"vscodeAvailable"`
-	VSCodePath          string `json:"vscodePath,omitempty"`
-	InsidersAvailable   bool   `json:"insidersAvailable"`
-	InsidersPath        string `json:"insidersPath,omitempty"`
-	CodiumAvailable     bool   `json:"codiumAvailable"`
-	CodiumPath          string `json:"codiumPath,omitempty"`
-	AnyAvailable        bool   `json:"anyAvailable"`
-	PreferredCLI        string `json:"preferredCli,omitempty"`
+	VSCodeAvailable   bool   `json:"vscodeAvailable"`
+	VSCodePath        string `json:"vscodePath,omitempty"`
+	InsidersAvailable bool   `json:"insidersAvailable"`
+	InsidersPath      string `json:"insidersPath,omitempty"`
+	CodiumAvailable   bool   `json:"codiumAvailable"`
+	CodiumPath        string `json:"codiumPath,omitempty"`
+	AnyAvailable      bool   `json:"anyAvailable"`
+	PreferredCLI      string `json:"preferredCli,omitempty"`
 }
 
 // InstallResult represents the result of installing an extension via CLI

@@ -18,7 +18,7 @@ var auditCmd = &cobra.Command{
 Provides a summary report showing trust levels and any issues found.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		scanner := validation.NewScanner()
-		
+
 		report, err := scanner.AuditExtensions(extensionsPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error auditing extensions: %v\n", err)
@@ -64,14 +64,14 @@ func printAuditReport(report *models.AuditReport) {
 			if result.TrustLevel == models.TrustLevelSuspicious || result.TrustLevel == models.TrustLevelMalicious {
 				trustColor := getTrustColor(result.TrustLevel)
 				fmt.Printf("\n%s [%s%s%s]\n", result.ExtensionID, trustColor, result.TrustLevel, colorReset)
-				
+
 				if len(result.Differences) > 0 {
 					fmt.Println("  Issues:")
 					for _, diff := range result.Differences {
 						fmt.Printf("    - %s\n", diff)
 					}
 				}
-				
+
 				fmt.Printf("  Recommendation: %s\n", result.Recommendation)
 			}
 		}

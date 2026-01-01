@@ -219,27 +219,27 @@ func (a *App) InstallExtensionsViaCLI(cliCommand string, extensionIDs []string) 
 
 // SyncExtensions syncs selected extensions from source to target editors
 func (a *App) SyncExtensions(sourceEditor string, targetEditors []string, extensionIDs []string, overwriteConflicts bool) (*models.SyncReport, error) {
-	log.Printf("[App] SyncExtensions called: source=%s, targets=%v, exts=%d, overwrite=%v", 
+	log.Printf("[App] SyncExtensions called: source=%s, targets=%v, exts=%d, overwrite=%v",
 		sourceEditor, targetEditors, len(extensionIDs), overwriteConflicts)
-	
+
 	targets := make([]models.EditorType, len(targetEditors))
 	for i, t := range targetEditors {
 		targets[i] = models.EditorType(t)
 	}
-	
+
 	request := models.SyncRequest{
 		SourceEditor:       models.EditorType(sourceEditor),
 		TargetEditors:      targets,
 		ExtensionIDs:       extensionIDs,
 		OverwriteConflicts: overwriteConflicts,
 	}
-	
+
 	return editor.SyncExtensions(request)
 }
 
 // DetectSyncConflicts checks which extensions would conflict if synced
 func (a *App) DetectSyncConflicts(sourceEditor string, targetEditor string, extensionIDs []string) ([]string, error) {
-	log.Printf("[App] DetectSyncConflicts called: source=%s, target=%s, exts=%d", 
+	log.Printf("[App] DetectSyncConflicts called: source=%s, target=%s, exts=%d",
 		sourceEditor, targetEditor, len(extensionIDs))
 	return editor.DetectConflicts(models.EditorType(sourceEditor), models.EditorType(targetEditor), extensionIDs)
 }

@@ -34,9 +34,9 @@ func CheckVsynxCLIStatus() CLIInstallStatus {
 
 	// Check if running in dev mode
 	execPath, _ := os.Executable()
-	isDevMode := strings.Contains(strings.ToLower(execPath), "wails") || 
-	            strings.Contains(strings.ToLower(execPath), "tmp") ||
-	            strings.Contains(strings.ToLower(execPath), "temp")
+	isDevMode := strings.Contains(strings.ToLower(execPath), "wails") ||
+		strings.Contains(strings.ToLower(execPath), "tmp") ||
+		strings.Contains(strings.ToLower(execPath), "temp")
 
 	if isDevMode {
 		status.Installed = false
@@ -119,9 +119,9 @@ func installCLIWindows() CLIInstallResult {
 	cliPath := filepath.Join(execDir, "vsynx.exe")
 	if _, err := os.Stat(cliPath); os.IsNotExist(err) {
 		// Check if running in dev mode (executable contains "wails" or "tmp")
-		if strings.Contains(strings.ToLower(execPath), "wails") || 
-		   strings.Contains(strings.ToLower(execPath), "tmp") ||
-		   strings.Contains(strings.ToLower(execPath), "temp") {
+		if strings.Contains(strings.ToLower(execPath), "wails") ||
+			strings.Contains(strings.ToLower(execPath), "tmp") ||
+			strings.Contains(strings.ToLower(execPath), "temp") {
 			return CLIInstallResult{
 				Success: false,
 				Message: "Development mode detected. CLI installation is only available in production builds.\n\nTo test CLI commands during development:\n  go run . <command> [args]\n\nExample:\n  go run . validate ms-python.python\n  go run . editors list\n  go run . sync preview --from vscode --to windsurf --all",

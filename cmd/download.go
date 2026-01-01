@@ -21,11 +21,11 @@ The package is verified and can be used to replace a suspicious or malicious ext
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		extensionID := args[0]
-		
+
 		validator := validation.NewValidator()
-		
+
 		fmt.Printf("Downloading official extension: %s\n", extensionID)
-		
+
 		data, hash, err := validator.DownloadOfficialExtension(extensionID)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error downloading extension: %v\n", err)

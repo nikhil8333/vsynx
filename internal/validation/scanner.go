@@ -47,7 +47,7 @@ func GetExtensionsPath() (string, error) {
 
 	// Default VS Code extensions path
 	var extensionsPath string
-	
+
 	// Check for different editors and locations
 	paths := []string{
 		// Linux/WSL standard locations
@@ -81,7 +81,7 @@ func GetExtensionsPath() (string, error) {
 
 	if extensionsPath == "" {
 		log.Printf("[Scanner] Could not find VS Code extensions directory in any standard location")
-		return "", fmt.Errorf("could not find VS Code extensions directory. Please use 'Change Path' to select manually. Checked locations: %s, %s, %s", 
+		return "", fmt.Errorf("could not find VS Code extensions directory. Please use 'Change Path' to select manually. Checked locations: %s, %s, %s",
 			filepath.Join(homeDir, ".vscode", "extensions"),
 			filepath.Join(homeDir, ".vscode-server", "extensions"),
 			filepath.Join(homeDir, ".config", "Code", "User", "extensions"))

@@ -19,7 +19,7 @@ func TestNewScanner(t *testing.T) {
 
 func TestGetExtensionsPath(t *testing.T) {
 	path, err := GetExtensionsPath()
-	
+
 	if err != nil {
 		t.Logf("GetExtensionsPath returned error (expected if VS Code not installed): %v", err)
 		return
