@@ -40,15 +40,15 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Build frontend (required for go:embed)
+        run: npm ci && npm run build
+        working-directory: frontend
+
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Generate Wails bindings
         run: wails generate module
-
-      - name: Build frontend (required for go:embed)
-        run: npm ci && npm run build
-        working-directory: frontend
 
       - name: Run Go tests
         run: go test -race -coverprofile=coverage.out ./...
@@ -77,15 +77,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Build frontend (required for go:embed)
+        run: npm ci && npm run build
+        working-directory: frontend
+
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Generate Wails bindings
         run: wails generate module
-
-      - name: Build frontend (required for go:embed)
-        run: npm ci && npm run build
-        working-directory: frontend
 
       - name: Run go vet
         run: go vet ./...
