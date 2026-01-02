@@ -37,6 +37,50 @@ cd frontend && npm install && cd ..
 wails build
 ```
 
+## Testing
+
+### Go (Backend)
+
+```bash
+# Fast unit tests (recommended)
+go test -v ./internal/...
+
+# Full test run (may require frontend build depending on environment)
+go test -v ./...
+```
+
+### Frontend Unit Tests (Vitest)
+
+Vitest runs in **watch mode** by default.
+
+```bash
+cd frontend
+
+# Watch mode (local development)
+npm run test
+
+# Single run (CI-friendly / doesn't "hang")
+npm run test -- --run
+
+# Coverage
+npm run test:coverage
+```
+
+### End-to-End Tests (Playwright)
+
+```bash
+cd frontend
+
+# One-time browser install (required once per machine)
+npx playwright install
+
+# Run E2E tests
+npm run test:e2e
+
+# E2E UI runner
+npm run test:e2e:ui
+```
+
 ## Usage
 
 ### GUI Application

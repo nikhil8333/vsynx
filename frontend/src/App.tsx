@@ -119,6 +119,8 @@ interface SyncReport {
 
 function App() {
   const [extensions, setExtensions] = useState<Extension[]>([])
+  // Cache audit reports per editor so user can switch between editors
+  const [auditReportsCache, setAuditReportsCache] = useState<Record<string, AuditReport>>({})
   const [auditReport, setAuditReport] = useState<AuditReport | null>(null)
   const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null)
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
@@ -142,6 +144,8 @@ function App() {
   const [syncConflicts, setSyncConflicts] = useState<string[]>([])
   const [showConflictDialog, setShowConflictDialog] = useState(false)
   const [targetEditorExtensions, setTargetEditorExtensions] = useState<Record<string, string[]>>({})
+  const [syncFilterMode, setSyncFilterMode] = useState<'all' | 'missing' | 'present'>('all')
+  const [syncSearchFilter, setSyncSearchFilter] = useState('')
   
   // Install-related state  
   const [installTargetEditor, setInstallTargetEditor] = useState<string>('vscode')
@@ -164,6 +168,10 @@ function App() {
   const [showInstallSyncDialog, setShowInstallSyncDialog] = useState(false)
   const [installSyncTargets, setInstallSyncTargets] = useState<string[]>([])
   const [installSyncInProgress, setInstallSyncInProgress] = useState(false)
+  
+  // Audit-specific state
+  const [auditLoading, setAuditLoading] = useState(false)
+  const auditCancelRef = useRef(false)
 
   useEffect(() => {
     loadDefaultPath()
@@ -234,19 +242,28 @@ function App() {
 
   const handleAudit = async () => {
     console.log('[Frontend] Starting audit for path:', extensionsPath)
-    setLoading(true)
-    setView('audit')
+    auditCancelRef.current = false
+    setAuditLoading(true)
     setError(null)
     try {
       const report = await AuditAllExtensions(extensionsPath)
+      if (auditCancelRef.current) return
       console.log('[Frontend] Audit complete:', report)
       setAuditReport(report)
+      // Cache the report for this editor
+      setAuditReportsCache(prev => ({ ...prev, [selectedEditor]: report }))
     } catch (error) {
+      if (auditCancelRef.current) return
       console.error('[Frontend] Failed to audit extensions:', error)
       setError(`Failed to audit extensions: ${error}`)
     } finally {
-      setLoading(false)
+      if (!auditCancelRef.current) setAuditLoading(false)
     }
+  }
+
+  const handleCancelAudit = () => {
+    auditCancelRef.current = true
+    setAuditLoading(false)
   }
 
   const handleValidate = async (extensionId: string) => {
@@ -271,6 +288,15 @@ function App() {
       return
     }
     console.log('[Frontend] Searching marketplace for:', marketplaceSearchQuery)
+    // Suppress any pending or future suggestion displays
+    suppressSuggestionsRef.current = true
+    // Clear debounce timeout to prevent race condition with autocomplete
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
+    }
+    setShowSuggestions(false)
+    setSuggestions([])
     setLoading(true)
     setError(null)
     setMarketplaceSearchResult(null)
@@ -310,6 +336,7 @@ function App() {
 
   // Debounced search for autocomplete suggestions
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suppressSuggestionsRef = useRef(false)
   
   const handleSearchInputChange = (value: string) => {
     setMarketplaceSearchQuery(value)
@@ -327,12 +354,18 @@ function App() {
       return
     }
     
+    // Reset suppress flag when user types
+    suppressSuggestionsRef.current = false
+    
     // Debounce search
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
         const results = await SearchMarketplace(value.trim())
-        setSuggestions(results?.slice(0, 8) || [])
-        setShowSuggestions(true)
+        // Only show suggestions if not suppressed (e.g., user clicked search button)
+        if (!suppressSuggestionsRef.current) {
+          setSuggestions(results?.slice(0, 8) || [])
+          setShowSuggestions(true)
+        }
       } catch (error) {
         console.error('[Frontend] Autocomplete search failed:', error)
         setSuggestions([])
@@ -438,6 +471,10 @@ function App() {
     setSelectedEditor(editorId)
     setLoading(true)
     setError(null)
+    // Restore cached audit report for this editor (if any) or clear it
+    setAuditReport(auditReportsCache[editorId] || null)
+    setAuditLoading(false)
+    auditCancelRef.current = true
     try {
       const exts = await GetEditorExtensions(editorId)
       console.log('[Frontend] Loaded extensions for editor:', exts?.length || 0)
@@ -578,8 +615,9 @@ function App() {
     )
   }
 
-  const handleSyncSelectAll = () => {
-    setSyncSelectedExtensions(extensions.map(e => e.id))
+  const handleSyncSelectAll = (filteredExts: Extension[]) => {
+    const visibleIds = filteredExts.map(e => e.id)
+    setSyncSelectedExtensions(prev => [...new Set([...prev, ...visibleIds])])
   }
 
   const handleSyncClearAll = () => {
@@ -753,9 +791,8 @@ function App() {
             {!navCollapsed && <span>Marketplace</span>}
           </button>
           <button
-            onClick={handleAudit}
-            disabled={loading}
-            className={`w-full flex items-center space-x-3 px-4 py-3 transition ${view === 'audit' ? 'bg-blue-700 border-r-4 border-white' : 'hover:bg-blue-700'} disabled:opacity-50`}
+            onClick={() => setView('audit')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 transition ${view === 'audit' ? 'bg-blue-700 border-r-4 border-white' : 'hover:bg-blue-700'}`}
             title="Audit"
           >
             <Shield className="w-5 h-5 flex-shrink-0" />
@@ -980,6 +1017,10 @@ function App() {
             showConflictDialog={showConflictDialog}
             loading={loading}
             targetEditorExtensions={targetEditorExtensions}
+            syncFilterMode={syncFilterMode}
+            setSyncFilterMode={setSyncFilterMode}
+            syncSearchFilter={syncSearchFilter}
+            setSyncSearchFilter={setSyncSearchFilter}
             onToggleExtension={handleSyncToggleExtension}
             onSelectAll={handleSyncSelectAll}
             onClearAll={handleSyncClearAll}
@@ -994,7 +1035,9 @@ function App() {
         ) : view === 'audit' ? (
           <AuditView
             report={auditReport}
-            loading={loading}
+            loading={auditLoading}
+            onStartAudit={handleAudit}
+            onCancelAudit={handleCancelAudit}
             getTrustIcon={getTrustIcon}
             getTrustColor={getTrustColor}
           />
@@ -1032,9 +1075,9 @@ function ExtensionsList({
             Installed Extensions ({extensions.length})
           </h2>
           <div className="space-y-2">
-            {extensions.map((ext: Extension) => (
+            {extensions.map((ext: Extension, idx: number) => (
               <div
-                key={ext.id}
+                key={`${ext.id}-${ext.version}-${idx}`}
                 onClick={() => onSelectExtension(ext)}
                 className={`p-4 border rounded-lg cursor-pointer transition ${
                   selectedExtension?.id === ext.id
@@ -1134,19 +1177,37 @@ function ExtensionsList({
 }
 
 // Audit View Component
-function AuditView({ report, loading, getTrustIcon, getTrustColor }: any) {
-  if (loading) {
+function AuditView({ report, loading, onStartAudit, onCancelAudit, getTrustIcon, getTrustColor }: any) {
+  // Empty state - no report yet, not loading
+  if (!report && !loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="h-full flex flex-col items-center justify-center text-gray-500">
+        <Shield className="w-16 h-16 text-gray-300 mb-4" />
+        <h3 className="text-xl font-semibold text-gray-700 mb-2">Security Audit</h3>
+        <p className="text-gray-500 mb-6">Scan all installed extensions for security issues</p>
+        <button
+          onClick={onStartAudit}
+          className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+        >
+          <Shield className="w-5 h-5" />
+          <span>Start Audit</span>
+        </button>
       </div>
     )
   }
 
-  if (!report) {
+  // Loading state
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        <p>Click Audit to scan all extensions</p>
+      <div className="h-full flex flex-col items-center justify-center">
+        <RefreshCw className="w-12 h-12 animate-spin text-blue-600 mb-4" />
+        <p className="text-gray-600 mb-4">Auditing extensions...</p>
+        <button
+          onClick={onCancelAudit}
+          className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+        >
+          Cancel
+        </button>
       </div>
     )
   }
@@ -1154,7 +1215,16 @@ function AuditView({ report, loading, getTrustIcon, getTrustColor }: any) {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-2xl font-bold mb-6">Extension Audit Report</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Extension Audit Report</h2>
+          <button
+            onClick={onStartAudit}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Re-audit</span>
+          </button>
+        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-4 gap-4 mb-8">
@@ -1262,6 +1332,15 @@ function MarketplaceSearchView({
   getTrustIcon, 
   getTrustColor 
 }: any) {
+  const detailsRef = useRef<HTMLDivElement>(null)
+  
+  // Auto-scroll to details panel when a result is selected
+  useEffect(() => {
+    if (selectedResult && detailsRef.current) {
+      detailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [selectedResult])
+
   return (
     <div className="h-full overflow-y-auto p-6 bg-gray-50">
       <div className="container mx-auto max-w-6xl">
@@ -1381,7 +1460,7 @@ function MarketplaceSearchView({
 
         {/* Extension Details Panel - shows when selectedResult exists */}
         {selectedResult && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div ref={detailsRef} className="bg-white rounded-lg shadow-lg p-6">
             {/* Header with selected extension info */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b">
               <div className="flex items-center space-x-3">
@@ -1721,6 +1800,10 @@ function SyncView({
   showConflictDialog,
   loading,
   targetEditorExtensions,
+  syncFilterMode,
+  setSyncFilterMode,
+  syncSearchFilter,
+  setSyncSearchFilter,
   onToggleExtension,
   onSelectAll,
   onClearAll,
@@ -1732,15 +1815,16 @@ function SyncView({
   onCancelConflict,
   onEditorChange,
 }: any) {
-  const [syncSearchFilter, setSyncSearchFilter] = useState('')
-  const [syncFilterMode, setSyncFilterMode] = useState<'all' | 'missing' | 'present'>('all')
-  
   const vsCodeFamilyEditors = editorProfiles.filter((p: EditorProfile) => p.isVSCodeFamily)
   const cloneEditors = editorProfiles.filter((p: EditorProfile) => !p.isVSCodeFamily)
   
+  // Check if all target editor extensions have been loaded
+  const targetsLoaded = syncTargetEditors.length === 0 || 
+    syncTargetEditors.every((editorId: string) => targetEditorExtensions[editorId] !== undefined)
+  
   // Helper to check if extension is missing from all targets
   const isMissingFromAllTargets = (extId: string) => {
-    if (syncTargetEditors.length === 0) return false
+    if (syncTargetEditors.length === 0 || !targetsLoaded) return false
     const extIdLower = extId.toLowerCase()
     return !syncTargetEditors.some((editorId: string) => 
       targetEditorExtensions[editorId]?.includes(extIdLower)
@@ -1749,6 +1833,7 @@ function SyncView({
   
   // Helper to check if extension exists in any target
   const existsInAnyTarget = (extId: string) => {
+    if (syncTargetEditors.length === 0 || !targetsLoaded) return false
     const extIdLower = extId.toLowerCase()
     return syncTargetEditors.some((editorId: string) => 
       targetEditorExtensions[editorId]?.includes(extIdLower)
@@ -1762,11 +1847,13 @@ function SyncView({
       return false
     }
     // Mode filter
-    if (syncFilterMode === 'missing' && !isMissingFromAllTargets(ext.id)) {
-      return false
+    if (syncFilterMode === 'missing') {
+      const isMissing = isMissingFromAllTargets(ext.id)
+      if (!isMissing) return false
     }
-    if (syncFilterMode === 'present' && !existsInAnyTarget(ext.id)) {
-      return false
+    if (syncFilterMode === 'present') {
+      const isPresent = existsInAnyTarget(ext.id)
+      if (!isPresent) return false
     }
     return true
   })
@@ -1864,7 +1951,7 @@ function SyncView({
           </div>
         </div>
 
-        {/* Extensions Selection */}
+          {/* Extensions Selection */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center">
@@ -1889,51 +1976,60 @@ function SyncView({
             {/* Filter Mode Toggles */}
             <div className="flex rounded-lg border border-gray-300 overflow-hidden">
               <button
+                type="button"
                 onClick={() => setSyncFilterMode('all')}
                 className={`px-3 py-2 text-sm ${syncFilterMode === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
               >
                 All ({extensions.length})
               </button>
               <button
+                type="button"
                 onClick={() => setSyncFilterMode('missing')}
-                className={`px-3 py-2 text-sm border-l ${syncFilterMode === 'missing' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                disabled={syncTargetEditors.length === 0}
-                title={syncTargetEditors.length === 0 ? 'Select target editors first' : 'Show extensions missing from all targets'}
+                className={`px-3 py-2 text-sm border-l ${syncFilterMode === 'missing' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} disabled:opacity-50`}
+                disabled={syncTargetEditors.length === 0 || !targetsLoaded}
+                title={syncTargetEditors.length === 0 ? 'Select target editors first' : !targetsLoaded ? 'Loading...' : 'Show extensions missing from all targets'}
               >
-                Missing ({missingCount})
+                Missing ({targetsLoaded ? missingCount : '...'})
               </button>
               <button
+                type="button"
                 onClick={() => setSyncFilterMode('present')}
-                className={`px-3 py-2 text-sm border-l ${syncFilterMode === 'present' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                disabled={syncTargetEditors.length === 0}
-                title={syncTargetEditors.length === 0 ? 'Select target editors first' : 'Show extensions already in at least one target'}
+                className={`px-3 py-2 text-sm border-l ${syncFilterMode === 'present' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} disabled:opacity-50`}
+                disabled={syncTargetEditors.length === 0 || !targetsLoaded}
+                title={syncTargetEditors.length === 0 ? 'Select target editors first' : !targetsLoaded ? 'Loading...' : 'Show extensions already in at least one target'}
               >
-                Present ({presentCount})
+                Present ({targetsLoaded ? presentCount : '...'})
               </button>
             </div>
+            {syncTargetEditors.length > 0 && !targetsLoaded && (
+              <div className="flex items-center text-sm text-blue-600">
+                <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                Loading target extensions...
+              </div>
+            )}
           </div>
           
           {/* Bulk Action Buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
             <button
-              onClick={onSelectAll}
+              onClick={() => onSelectAll(filteredExtensions)}
               className="px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
             >
               Select All Visible
             </button>
             <button
               onClick={() => onSelectMissing(filteredExtensions)}
-              disabled={syncTargetEditors.length === 0}
+              disabled={syncTargetEditors.length === 0 || !targetsLoaded}
               className="px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Select all extensions missing from targets"
+              title={!targetsLoaded ? 'Loading...' : 'Select all extensions missing from targets'}
             >
               Select Missing
             </button>
             <button
               onClick={() => onSelectPresent(filteredExtensions)}
-              disabled={syncTargetEditors.length === 0}
+              disabled={syncTargetEditors.length === 0 || !targetsLoaded}
               className="px-3 py-1.5 text-sm bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Select all extensions already in targets"
+              title={!targetsLoaded ? 'Loading...' : 'Select all extensions already in targets'}
             >
               Select Present
             </button>
@@ -1945,31 +2041,38 @@ function SyncView({
             </button>
           </div>
 
-          <div className="max-h-64 overflow-y-auto border rounded-lg">
+          <div key={`ext-list-${syncFilterMode}-${syncSearchFilter}-${filteredExtensions.length}`} className="max-h-64 overflow-y-auto border rounded-lg">
             {filteredExtensions.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                No extensions found. Select a source editor with extensions.
+                {syncFilterMode === 'missing' ? 'No extensions missing from targets' : 
+                 syncFilterMode === 'present' ? 'No extensions found in targets' :
+                 'No extensions found. Select a source editor with extensions.'}
               </div>
             ) : (
               <div className="divide-y">
-                {filteredExtensions.map((ext: Extension) => {
+                {filteredExtensions.map((ext: Extension, idx: number) => {
                   // Check which target editors already have this extension
                   const extIdLower = ext.id.toLowerCase()
                   const existsInEditors = syncTargetEditors.filter((editorId: string) => 
                     targetEditorExtensions[editorId]?.includes(extIdLower)
                   )
                   const isNewToAll = existsInEditors.length === 0 && syncTargetEditors.length > 0
+                  const isSelected = syncSelectedExtensions.includes(ext.id)
                   
                   return (
                     <label
-                      key={ext.id}
-                      className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
-                        existsInEditors.length > 0 ? 'bg-yellow-50' : ''
+                      key={`${ext.id}-${ext.version}-${idx}`}
+                      className={`flex items-center p-3 cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-100 border-l-4 border-blue-500' 
+                          : existsInEditors.length > 0 
+                            ? 'bg-yellow-50 hover:bg-yellow-100' 
+                            : 'hover:bg-gray-50'
                       }`}
                     >
                       <input
                         type="checkbox"
-                        checked={syncSelectedExtensions.includes(ext.id)}
+                        checked={isSelected}
                         onChange={() => onToggleExtension(ext.id)}
                         className="w-4 h-4 mr-3 text-blue-600 rounded"
                       />

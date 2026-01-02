@@ -42,18 +42,7 @@ cd ..
 go test ./...
 ```
 
-Alternatively, use the provided test script:
-
-**Linux/macOS:**
-```bash
-chmod +x scripts/test.sh
-./scripts/test.sh
-```
-
-**Windows:**
-```powershell
-.\scripts\test.ps1
-```
+Note: `go test ./...` is for the Go codebase. Frontend unit tests and E2E tests are run separately (see below).
 
 ## Test Coverage
 
@@ -149,12 +138,7 @@ func TestScanner(t *testing.T) {
 
 ## Continuous Integration
 
-Tests are run automatically on:
-- Pull requests
-- Commits to main branch
-- Release tags
-
-See `.github/workflows/test.yml` for CI configuration.
+For CI, prefer running tests in single-run mode (no watchers), e.g. `go test ./internal/...` and `npm run test -- --run`.
 
 ## Troubleshooting
 
@@ -188,12 +172,34 @@ go mod download
 
 ### Frontend Tests
 
-Frontend tests use Vitest (if configured):
+Frontend unit tests use Vitest.
 
 ```bash
 cd frontend
-npm test
+
+# Watch mode (local development)
+npm run test
+
+# Single run (CI-friendly / doesn't wait for file changes)
+npm run test -- --run
+
+# Coverage
 npm run test:coverage
+```
+
+End-to-end tests use Playwright:
+
+```bash
+cd frontend
+
+# One-time browser install (required once per machine)
+npx playwright install
+
+# Run E2E tests
+npm run test:e2e
+
+# E2E UI runner
+npm run test:e2e:ui
 ```
 
 ## Test Best Practices

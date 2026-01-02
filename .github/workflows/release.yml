@@ -216,17 +216,3 @@ jobs:
             release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Release-please for auto-versioning (optional - runs on main branch)
-  release-please:
-    name: Release Please
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: google-github-actions/release-please-action@v4
-        with:
-          release-type: go
-          package-name: vsynx
