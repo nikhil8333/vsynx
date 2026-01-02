@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Comprehensive automated testing across backend and frontend
+  - Go unit tests for `internal/editor` (including sync logic)
+  - Frontend unit tests using Vitest + Testing Library
+  - End-to-end tests using Playwright covering core user flows
+- New test commands for frontend unit tests, coverage, and E2E runs
+
+### Changed
+
+- Updated documentation to include test commands and watch-mode notes
+
 ## [1.0.0] - 2024-12-31
 
 ### Added
