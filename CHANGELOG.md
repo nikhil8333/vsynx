@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1](https://github.com/nikhil8333/vsynx/compare/vsynx-v1.0.0...vsynx-v1.0.1) (2026-01-02)
+
+
+### Bug Fixes
+
+* **release:** update WebKit dependency for Ubuntu 24.04 ([#2](https://github.com/nikhil8333/vsynx/issues/2)) ([b32a86b](https://github.com/nikhil8333/vsynx/commit/b32a86ba5fad29286cccd791e7e81ef4002cd732))
+* **release:** use ubuntu-22.04 for Linux builds, remove cross-compile targets ([#3](https://github.com/nikhil8333/vsynx/issues/3)) ([8e67af6](https://github.com/nikhil8333/vsynx/commit/8e67af6c06793e52ad52547beb54158518c9a483))
+
 ## [Unreleased]
 
 ### Added

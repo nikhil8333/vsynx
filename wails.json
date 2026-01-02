@@ -13,7 +13,7 @@
   "info": {
     "companyName": "Vsynx",
     "productName": "Vsynx Manager",
-    "productVersion": "1.0.0",
+    "productVersion": "1.0.1",
     "copyright": "Copyright © 2024 Vsynx Team",
     "comments": "Secure VS Code extension manager"
   },
