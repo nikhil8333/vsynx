@@ -101,7 +101,7 @@ func TestDetectConflicts(t *testing.T) {
 	// This test uses the actual DetectConflicts function
 	// It will return empty conflicts for non-existent editors
 	conflicts, err := DetectConflicts(models.EditorVSCode, models.EditorWindsurf, []string{"test.extension"})
-	
+
 	// If either editor doesn't exist, we expect either an error or empty conflicts
 	if err != nil {
 		// Expected if editor profiles don't exist
