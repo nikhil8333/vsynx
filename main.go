@@ -3,9 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"syscall"
 
 	"github.com/yourusername/secureopenvsx/cmd"
 )
@@ -17,12 +15,9 @@ func main() {
 	// If named "vsynx" (not vsynx-manager), treat as CLI
 	isCLI := strings.HasPrefix(baseName, "vsynx") && !strings.Contains(baseName, "manager")
 
-	// On Windows, if running as CLI, attach to the parent console to show output
-	if isCLI && runtime.GOOS == "windows" {
-		modkernel32 := syscall.NewLazyDLL("kernel32.dll")
-		procAttachConsole := modkernel32.NewProc("AttachConsole")
-		const ATTACH_PARENT_PROCESS = ^uintptr(0) // -1
-		procAttachConsole.Call(ATTACH_PARENT_PROCESS)
+	// If running as CLI, attach to the parent console if necessary (Windows only)
+	if isCLI {
+		attachConsole()
 	}
 
 	// Routing Logic:
