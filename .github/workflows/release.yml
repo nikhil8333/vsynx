@@ -129,6 +129,10 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           cd build/bin
+          echo "=== Listing build/bin contents ==="
+          ls -la
+          # Ensure we don't have a stale 'Vsynx Manager.app' from a previous run
+          rm -rf "Vsynx Manager.app"
           # Wails outputs 'vsynx-manager-macos-amd64.app', we want a nicer name inside the DMG
           mv "${{ matrix.config.output }}.app" "Vsynx Manager.app"
           # Ad-hoc code sign to prevent "damaged" errors
