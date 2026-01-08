@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // CLIInstallStatus represents the current CLI installation status
@@ -65,15 +66,11 @@ func CheckVsynxCLIStatus() CLIInstallStatus {
 			status.Version = strings.TrimSpace(string(output))
 		}
 	} else {
+		// If vsynx.exe is missing but we are running the app, we can likely install it by copying ourselves.
+		// So we report CanInstall = true, but Installed = false
 		status.Installed = false
-		switch runtime.GOOS {
-		case "windows":
-			status.Instructions = "Click 'Install CLI' to add vsynx to your PATH, or reinstall Vsynx Manager with the CLI option enabled."
-		case "darwin":
-			status.Instructions = "Install via Homebrew: brew install vsynx, or click 'Install CLI' to create a symlink."
-		default:
-			status.Instructions = "Click 'Install CLI' to install vsynx to ~/.local/bin, or extract the CLI from the release archive."
-		}
+		status.CanInstall = true
+		status.Instructions = "Click 'Install CLI' to configure the vsynx command."
 	}
 
 	return status
@@ -118,18 +115,25 @@ func installCLIWindows() CLIInstallResult {
 	// Check if vsynx.exe exists in the same directory
 	cliPath := filepath.Join(execDir, "vsynx.exe")
 	if _, err := os.Stat(cliPath); os.IsNotExist(err) {
-		// Check if running in dev mode (executable contains "wails" or "tmp")
+		// If vsynx.exe is missing, we check if we (the running process) can act as the CLI.
+		// Since main.go supports CLI args, we can just copy ourselves to "vsynx.exe"
+
+		// Check if running in dev mode
 		if strings.Contains(strings.ToLower(execPath), "wails") ||
 			strings.Contains(strings.ToLower(execPath), "tmp") ||
 			strings.Contains(strings.ToLower(execPath), "temp") {
 			return CLIInstallResult{
 				Success: false,
-				Message: "Development mode detected. CLI installation is only available in production builds.\n\nTo test CLI commands during development:\n  go run . <command> [args]\n\nExample:\n  go run . validate ms-python.python\n  go run . editors list\n  go run . sync preview --from vscode --to windsurf --all",
+				Message: "Development mode detected. CLI installation is only available in production builds.",
 			}
 		}
-		return CLIInstallResult{
-			Success: false,
-			Message: "vsynx.exe not found. Please reinstall Vsynx Manager or build the application.",
+
+		// Self-heal: Copy current executable to vsynx.exe
+		if err := copyFile(execPath, cliPath); err != nil {
+			return CLIInstallResult{
+				Success: false,
+				Message: fmt.Sprintf("vsynx.exe not found and failed to create copy from main binary: %v", err),
+			}
 		}
 	}
 
@@ -175,6 +179,34 @@ func uninstallCLIWindows() CLIInstallResult {
 		}
 	}
 	execDir := filepath.Dir(execPath)
+
+	// Remove vsynx.exe file with retry strategy
+	cliPath := filepath.Join(execDir, "vsynx.exe")
+	if _, err := os.Stat(cliPath); err == nil {
+		// Try to verify it's not the running executable (just in case)
+		if strings.EqualFold(execPath, cliPath) {
+			// This should happen only if user renamed vsynx-manager.exe to vsynx.exe and ran it
+			// We cannot delete ourselves.
+			return CLIInstallResult{
+				Success: false,
+				Message: "Cannot uninstall CLI because the application is running as 'vsynx.exe'. Please rename the executable to 'vsynx-manager.exe' and try again.",
+			}
+		}
+
+		// Attempt removal
+		err := os.Remove(cliPath)
+		if err != nil {
+			// Simple retry logic for Windows file locking
+			// Wait 500ms and try again
+			time.Sleep(500 * time.Millisecond)
+			if err := os.Remove(cliPath); err != nil {
+				return CLIInstallResult{
+					Success: false,
+					Message: fmt.Sprintf("Failed to remove vsynx.exe: %v. Please ensure no terminal windows are using 'vsynx' and try again, or delete '%s' manually.", err, cliPath),
+				}
+			}
+		}
+	}
 
 	// Remove from user PATH using PowerShell
 	psCmd := fmt.Sprintf(`$path = [Environment]::GetEnvironmentVariable("Path", "User"); $path = ($path.Split(";") | Where-Object { $_ -ne "%s" }) -join ";"; [Environment]::SetEnvironmentVariable("Path", $path, "User")`, execDir)
