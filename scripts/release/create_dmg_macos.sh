@@ -27,8 +27,15 @@ if [[ "${APP_BUNDLE}" != "${APP_NAME}" ]]; then
   mv "${APP_BUNDLE}" "${APP_NAME}"
 fi
 
-echo "=== Ad-hoc signing ==="
-codesign --force --deep --sign - "${APP_NAME}"
+echo "=== Code signing ==="
+# Use proper signing if available, otherwise ad-hoc
+if [[ -n "${APPLE_CERTIFICATE:-}" ]]; then
+    echo "Running Developer ID signing script..."
+    bash "$(dirname "$0")/sign_macos.sh" "${APP_NAME}"
+else
+    echo "No APPLE_CERTIFICATE - using ad-hoc signing"
+    codesign --force --deep --sign - "${APP_NAME}"
+fi
 
 echo "=== Creating DMG ==="
 

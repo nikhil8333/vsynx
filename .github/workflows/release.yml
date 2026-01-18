@@ -142,12 +142,39 @@ jobs:
 
         shell: bash
 
-      # Package macOS DMG
+      # Package macOS DMG (with signing if configured)
       - name: Create DMG (macOS)
         if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           bash scripts/release/create_dmg_macos.sh "${{ matrix.config.output }}"
         shell: bash
+
+      # Sign Windows binaries
+      - name: Sign Windows binaries
+        if: runner.os == 'Windows'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          # Sign the main executable
+          Get-ChildItem -Path build/bin -Filter "*.exe" | ForEach-Object {
+            Write-Host "Signing: $($_.FullName)"
+            .\scripts\release\sign_windows.ps1 -FilePath $_.FullName
+          }
+          
+          # Sign the app executable inside the bundle if exists
+          $appExe = "build/bin/${{ matrix.config.output }}.exe"
+          if (Test-Path $appExe) {
+            Write-Host "Signing app: $appExe"
+            .\scripts\release\sign_windows.ps1 -FilePath $appExe
+          }
+        shell: pwsh
 
       # Prepare Windows Installer for Upload
       - name: Prepare Windows Installer
