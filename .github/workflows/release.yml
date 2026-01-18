@@ -3,12 +3,18 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to build from"
+        required: true
+        default: main
 
 env:
-  GO_VERSION: '1.21'
-  NODE_VERSION: '18'
-  NODE_OPTIONS: '--max-old-space-size=4096'
+  GO_VERSION: "1.21"
+  NODE_VERSION: "18"
+  NODE_OPTIONS: "--max-old-space-size=4096"
 
 jobs:
   build:
@@ -44,22 +50,24 @@ jobs:
             os: macos-latest
             platform: darwin/amd64
             output: vsynx-manager-macos-amd64
-            ext: ''
+            ext: ""
           - name: macOS arm64
             os: macos-latest
             platform: darwin/arm64
             output: vsynx-manager-macos-arm64
-            ext: ''
+            ext: ""
 
           # Linux builds
           - name: Linux amd64
             os: ubuntu-22.04
             platform: linux/amd64
             output: vsynx-manager-linux-amd64
-            ext: ''
+            ext: ""
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -70,7 +78,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       # Linux dependencies
@@ -92,7 +100,7 @@ jobs:
 
       # Install Wails
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
 
       # Install frontend dependencies
       - name: Install frontend dependencies
@@ -100,46 +108,62 @@ jobs:
         working-directory: frontend
 
       # Build application
-      - name: Build Wails app (Windows with Installer)
-        if: runner.os == 'Windows'
-        run: | 
-          wails build -nsis -platform ${{ matrix.config.platform }} -o ${{ matrix.config.output }}${{ matrix.config.ext }}
-          # Wails NSIS generates 'build/bin/<output>-installer.exe' or similar. 
-          # We need to find it and standardize the name.
-          cd build/bin
-          dir
-        shell: cmd
-
-      - name: Build Wails app (macOS/Linux)
-        if: runner.os != 'Windows'
-        run: wails build -platform ${{ matrix.config.platform }} -o ${{ matrix.config.output }}${{ matrix.config.ext }}
+      - name: Build Wails app
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ] && [ "${{ matrix.config.installer }}" == "true" ]; then
+            wails build -nsis -platform ${{ matrix.config.platform }} -o ${{ matrix.config.output }}${{ matrix.config.ext }}
+          else
+            wails build -platform ${{ matrix.config.platform }} -o ${{ matrix.config.output }}${{ matrix.config.ext }}
+          fi
+        shell: bash
 
       # Build CLI binary separately
       - name: Build CLI binary
         run: |
           GOOS=$(echo ${{ matrix.config.platform }} | cut -d'/' -f1)
           GOARCH=$(echo ${{ matrix.config.platform }} | cut -d'/' -f2)
-          go build -o build/bin/vsynx${{ matrix.config.ext }} -ldflags="-s -w" .
+          echo "Building CLI for $GOOS/$GOARCH"
+          GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=0 go build -o build/bin/vsynx${{ matrix.config.ext }} -ldflags="-s -w" .
         shell: bash
-        env:
-          CGO_ENABLED: 0
 
       # Package macOS DMG
       - name: Create DMG (macOS)
         if: runner.os == 'macOS'
         run: |
           cd build/bin
-          echo "=== Listing build/bin contents ==="
-          ls -la
-          # Ensure we don't have a stale 'Vsynx Manager.app' from a previous run
+          echo "=== DEBUG: build/bin contents ==="
+          ls -R
+
+          echo "=== Preparing Vsynx Manager.app ==="
+          # Cleanup any existing directory to prevent 'mv' moving into it
           rm -rf "Vsynx Manager.app"
-          # Wails outputs 'vsynx-manager-macos-amd64.app', we want a nicer name inside the DMG
-          mv "${{ matrix.config.output }}.app" "Vsynx Manager.app"
+
+          # Find the app bundle produced by Wails. Support various possible names.
+          APP_BUNDLE=$(ls -1d *.app 2>/dev/null | head -n 1)
+          if [ -z "$APP_BUNDLE" ]; then
+            echo "ERROR: No .app bundle found in build/bin"
+            exit 1
+          fi
+
+          echo "Found app bundle: $APP_BUNDLE"
+          if [ "$APP_BUNDLE" != "Vsynx Manager.app" ]; then
+            mv "$APP_BUNDLE" "Vsynx Manager.app"
+          fi
+
           # Ad-hoc code sign to prevent "damaged" errors
+          echo "=== Ad-hoc signing ==="
           codesign --force --deep --sign - "Vsynx Manager.app"
+
+          # Create DMG
+          echo "=== Creating DMG ==="
+          ICON_ARG=""
+          if [ -f "../../build/appicon.icns" ]; then
+            ICON_ARG="--volicon ../../build/appicon.icns"
+          fi
+
           create-dmg \
             --volname "Vsynx Manager" \
-            --volicon "../../build/appicon.icns" \
+            $ICON_ARG \
             --window-pos 200 120 \
             --window-size 800 400 \
             --icon-size 100 \
@@ -148,20 +172,20 @@ jobs:
             --app-drop-link 600 185 \
             "${{ matrix.config.output }}.dmg" \
             "Vsynx Manager.app"
-      
+
       # Prepare Windows Installer for Upload
       - name: Prepare Windows Installer
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.config.installer == 'true'
         run: |
           cd build/bin
-          # Find the installer executable and rename it
-          # Look for any exe that contains "installer" or "setup", but exclude the main binary
-          Get-ChildItem *.exe | Where-Object { $_.Name -match "amd64-installer" -or $_.Name -match "Setup" } | ForEach-Object {
-            Move-Item $_.FullName "${{ matrix.config.output }}-setup.exe"
+          # Find the installer executable (Wails names it project-version-arch-installer.exe)
+          Get-ChildItem -Filter "*-installer.exe" | ForEach-Object {
+            Move-Item $_.FullName "${{ matrix.config.output }}-setup.exe" -Force
+            echo "Renamed installer: $($_.Name) to ${{ matrix.config.output }}-setup.exe"
           }
         shell: pwsh
 
-      # Create Archives (keep existing logic for zip/tar fallback)
+      # Create Archives (fallback for all platforms)
       - name: Create archive (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -189,6 +213,7 @@ jobs:
 
   # Create GitHub Release
   release:
+    if: startsWith(github.ref, 'refs/tags/')
     name: Create Release
     runs-on: ubuntu-latest
     needs: build
