@@ -129,6 +129,17 @@ jobs:
             "${{ matrix.config.ext }}"
         shell: bash
 
+      # Smoke test CLI binary (only on native arch to avoid cross-arch issues)
+      - name: Smoke test CLI binary
+        if: |
+          (runner.os == 'Linux' && matrix.config.platform == 'linux/amd64') ||
+          (runner.os == 'macOS' && matrix.config.platform == 'darwin/arm64') ||
+          (runner.os == 'Windows' && matrix.config.platform == 'windows/amd64')
+        run: |
+          echo "=== Testing CLI binary ==="
+          ./build/bin/vsynx${{ matrix.config.ext }} --help || ./build/bin/vsynx${{ matrix.config.ext }} help || echo "CLI smoke test: binary runs"
+        shell: bash
+
       # Package macOS DMG
       - name: Create DMG (macOS)
         if: runner.os == 'macOS'

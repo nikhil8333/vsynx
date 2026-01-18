@@ -10,8 +10,8 @@ echo "=== DEBUG: build/bin contents ==="
 ls -R
 
 echo "=== Preparing ${APP_NAME} ==="
-rm -rf "${APP_NAME}"
 
+# Find existing .app bundle first (before any deletion)
 APP_BUNDLE=$(ls -1d *.app 2>/dev/null | head -n 1 || true)
 if [[ -z "${APP_BUNDLE}" ]]; then
   echo "ERROR: No .app bundle found in build/bin" >&2
@@ -20,6 +20,8 @@ fi
 
 echo "Found app bundle: ${APP_BUNDLE}"
 if [[ "${APP_BUNDLE}" != "${APP_NAME}" ]]; then
+  # Only remove target if we need to rename a different bundle into it
+  rm -rf "${APP_NAME}"
   mv "${APP_BUNDLE}" "${APP_NAME}"
 fi
 
