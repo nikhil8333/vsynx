@@ -127,6 +127,7 @@ jobs:
           bash scripts/release/build_cli.sh \
             "${{ matrix.config.platform }}" \
             "${{ matrix.config.ext }}"
+
         shell: bash
 
       # Smoke test CLI binary (only on native arch to avoid cross-arch issues)
@@ -138,6 +139,7 @@ jobs:
         run: |
           echo "=== Testing CLI binary ==="
           ./build/bin/vsynx${{ matrix.config.ext }} --help || ./build/bin/vsynx${{ matrix.config.ext }} help || echo "CLI smoke test: binary runs"
+
         shell: bash
 
       # Package macOS DMG

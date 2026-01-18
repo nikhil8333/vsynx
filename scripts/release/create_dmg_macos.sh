@@ -12,6 +12,7 @@ ls -R
 echo "=== Preparing ${APP_NAME} ==="
 
 # Find existing .app bundle first (before any deletion)
+
 APP_BUNDLE=$(ls -1d *.app 2>/dev/null | head -n 1 || true)
 if [[ -z "${APP_BUNDLE}" ]]; then
   echo "ERROR: No .app bundle found in build/bin" >&2
@@ -22,6 +23,7 @@ echo "Found app bundle: ${APP_BUNDLE}"
 if [[ "${APP_BUNDLE}" != "${APP_NAME}" ]]; then
   # Only remove target if we need to rename a different bundle into it
   rm -rf "${APP_NAME}"
+
   mv "${APP_BUNDLE}" "${APP_NAME}"
 fi
 
@@ -29,6 +31,7 @@ echo "=== Ad-hoc signing ==="
 codesign --force --deep --sign - "${APP_NAME}"
 
 echo "=== Creating DMG ==="
+
 DMG_ARGS=(
   --volname "Vsynx Manager"
   --window-pos 200 120
@@ -44,3 +47,4 @@ if [[ -f "../../build/appicon.icns" ]]; then
 fi
 
 create-dmg "${DMG_ARGS[@]}" "${DMG_NAME}.dmg" "${APP_NAME}"
+
