@@ -1,0 +1,50 @@
+Build macOS arm64	Create DMG (macOS)	﻿2026-01-08T02:29:33.2537160Z ##[group]Run cd build/bin
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2537450Z [36;1mcd build/bin[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2537920Z [36;1m# Wails outputs 'vsynx-manager-macos-amd64.app', we want a nicer name inside the DMG[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2538410Z [36;1mmv "vsynx-manager-macos-arm64.app" "Vsynx Manager.app"[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2559790Z [36;1m# Ad-hoc code sign to prevent "damaged" errors[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2560430Z [36;1mcodesign --force --deep --sign - "Vsynx Manager.app"[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2560780Z [36;1mcreate-dmg \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2560950Z [36;1m  --volname "Vsynx Manager" \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2561360Z [36;1m  --volicon "../../build/appicon.icns" \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2561790Z [36;1m  --window-pos 200 120 \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2561970Z [36;1m  --window-size 800 400 \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2562240Z [36;1m  --icon-size 100 \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2562440Z [36;1m  --icon "Vsynx Manager.app" 200 190 \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2562800Z [36;1m  --hide-extension "Vsynx Manager.app" \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2563360Z [36;1m  --app-drop-link 600 185 \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2563630Z [36;1m  "vsynx-manager-macos-arm64.dmg" \[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2564050Z [36;1m  "Vsynx Manager.app"[0m
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2604600Z shell: /bin/bash -e {0}
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2604860Z env:
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2605890Z   GO_VERSION: 1.21
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2606040Z   NODE_VERSION: 18
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2606300Z   NODE_OPTIONS: --max-old-space-size=4096
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.2606590Z ##[endgroup]
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.3043860Z mv: rename vsynx-manager-macos-arm64.app to Vsynx Manager.app/vsynx-manager-macos-arm64.app: No such file or directory
+Build macOS arm64	Create DMG (macOS)	2026-01-08T02:29:33.3054990Z ##[error]Process completed with exit code 1.
+Build macOS amd64	Create DMG (macOS)	﻿2026-01-08T02:28:54.2704340Z ##[group]Run cd build/bin
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2704730Z [36;1mcd build/bin[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2705110Z [36;1m# Wails outputs 'vsynx-manager-macos-amd64.app', we want a nicer name inside the DMG[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2705590Z [36;1mmv "vsynx-manager-macos-amd64.app" "Vsynx Manager.app"[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2706020Z [36;1m# Ad-hoc code sign to prevent "damaged" errors[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2706370Z [36;1mcodesign --force --deep --sign - "Vsynx Manager.app"[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2706680Z [36;1mcreate-dmg \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2706970Z [36;1m  --volname "Vsynx Manager" \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2707260Z [36;1m  --volicon "../../build/appicon.icns" \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2707580Z [36;1m  --window-pos 200 120 \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2707810Z [36;1m  --window-size 800 400 \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2708100Z [36;1m  --icon-size 100 \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2708350Z [36;1m  --icon "Vsynx Manager.app" 200 190 \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2708680Z [36;1m  --hide-extension "Vsynx Manager.app" \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2709050Z [36;1m  --app-drop-link 600 185 \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2709350Z [36;1m  "vsynx-manager-macos-amd64.dmg" \[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2709620Z [36;1m  "Vsynx Manager.app"[0m
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2746140Z shell: /bin/bash -e {0}
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2746370Z env:
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2746610Z   GO_VERSION: 1.21
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2746840Z   NODE_VERSION: 18
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2747040Z   NODE_OPTIONS: --max-old-space-size=4096
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.2747360Z ##[endgroup]
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.3135720Z mv: rename vsynx-manager-macos-amd64.app to Vsynx Manager.app/vsynx-manager-macos-amd64.app: No such file or directory
+Build macOS amd64	Create DMG (macOS)	2026-01-08T02:28:54.3311630Z ##[error]Process completed with exit code 1.

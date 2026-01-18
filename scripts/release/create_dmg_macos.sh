@@ -10,7 +10,8 @@ echo "=== DEBUG: build/bin contents ==="
 ls -R
 
 echo "=== Preparing ${APP_NAME} ==="
-rm -rf "${APP_NAME}"
+
+# Find existing .app bundle first (before any deletion)
 
 APP_BUNDLE=$(ls -1d *.app 2>/dev/null | head -n 1 || true)
 if [[ -z "${APP_BUNDLE}" ]]; then
@@ -20,6 +21,9 @@ fi
 
 echo "Found app bundle: ${APP_BUNDLE}"
 if [[ "${APP_BUNDLE}" != "${APP_NAME}" ]]; then
+  # Only remove target if we need to rename a different bundle into it
+  rm -rf "${APP_NAME}"
+
   mv "${APP_BUNDLE}" "${APP_NAME}"
 fi
 
@@ -27,19 +31,20 @@ echo "=== Ad-hoc signing ==="
 codesign --force --deep --sign - "${APP_NAME}"
 
 echo "=== Creating DMG ==="
-ICON_ARG=""
+
+DMG_ARGS=(
+  --volname "Vsynx Manager"
+  --window-pos 200 120
+  --window-size 800 400
+  --icon-size 100
+  --icon "${APP_NAME}" 200 190
+  --hide-extension "${APP_NAME}"
+  --app-drop-link 600 185
+)
+
 if [[ -f "../../build/appicon.icns" ]]; then
-  ICON_ARG=(--volicon "../../build/appicon.icns")
+  DMG_ARGS+=(--volicon "../../build/appicon.icns")
 fi
 
-create-dmg \
-  --volname "Vsynx Manager" \
-  "${ICON_ARG[@]}" \
-  --window-pos 200 120 \
-  --window-size 800 400 \
-  --icon-size 100 \
-  --icon "${APP_NAME}" 200 190 \
-  --hide-extension "${APP_NAME}" \
-  --app-drop-link 600 185 \
-  "${DMG_NAME}.dmg" \
-  "${APP_NAME}"
+create-dmg "${DMG_ARGS[@]}" "${DMG_NAME}.dmg" "${APP_NAME}"
+
