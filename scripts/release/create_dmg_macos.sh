@@ -29,19 +29,18 @@ echo "=== Ad-hoc signing ==="
 codesign --force --deep --sign - "${APP_NAME}"
 
 echo "=== Creating DMG ==="
-ICON_ARG=""
+DMG_ARGS=(
+  --volname "Vsynx Manager"
+  --window-pos 200 120
+  --window-size 800 400
+  --icon-size 100
+  --icon "${APP_NAME}" 200 190
+  --hide-extension "${APP_NAME}"
+  --app-drop-link 600 185
+)
+
 if [[ -f "../../build/appicon.icns" ]]; then
-  ICON_ARG=(--volicon "../../build/appicon.icns")
+  DMG_ARGS+=(--volicon "../../build/appicon.icns")
 fi
 
-create-dmg \
-  --volname "Vsynx Manager" \
-  "${ICON_ARG[@]}" \
-  --window-pos 200 120 \
-  --window-size 800 400 \
-  --icon-size 100 \
-  --icon "${APP_NAME}" 200 190 \
-  --hide-extension "${APP_NAME}" \
-  --app-drop-link 600 185 \
-  "${DMG_NAME}.dmg" \
-  "${APP_NAME}"
+create-dmg "${DMG_ARGS[@]}" "${DMG_NAME}.dmg" "${APP_NAME}"
