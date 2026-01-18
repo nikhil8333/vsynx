@@ -708,14 +708,28 @@ function App() {
       console.log('[Frontend] Sync complete:', report)
       setSyncReport(report)
       
-      // Show summary
+      // Show summary first
       const totalCopied = report?.totalCopied || 0
       const totalErrors = report?.totalErrors || 0
+
+      // Display the report briefly
+      setSyncReport(report)
+
       if (totalErrors > 0) {
         setError(`Sync completed with ${totalErrors} errors. ${totalCopied} extensions copied.`)
       } else {
         alert(`Sync complete! ${totalCopied} extensions copied to ${syncTargetEditors.length} editor(s).`)
       }
+
+      // Reset sync UI to initial state after showing the report
+      setTimeout(() => {
+        setTargetEditorExtensions({})
+        setSyncTargetEditors([])
+        setSyncSelectedExtensions([])
+        setSyncConflicts([])
+        setSyncReport(null)
+      }, 100)
+
     } catch (error) {
       console.error('[Frontend] Failed to sync extensions:', error)
       setError(`Failed to sync: ${error}`)
@@ -1028,8 +1042,8 @@ function App() {
             onSelectPresent={handleSelectPresent}
             onToggleTarget={handleSyncToggleTarget}
             onStartSync={handleStartSync}
-            onConfirmOverwrite={() => setShowConflictDialog(false)}
-            onCancelConflict={() => setShowConflictDialog(false)}
+            onConfirmOverwrite={() => executeSync(true)}
+            onCancelConflict={() => executeSync(false)}
             onEditorChange={handleEditorChange}
           />
         ) : view === 'audit' ? (

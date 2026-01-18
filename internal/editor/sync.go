@@ -121,6 +121,17 @@ func syncToTarget(sourceProfile models.EditorProfile, sourceIndex []models.Exten
 		}
 
 		// Create new index entry for target
+		// Normalize path for the platform
+		absPath, err := filepath.Abs(targetFolderPath)
+		if err != nil {
+			absPath = targetFolderPath
+		}
+		// Convert to forward slashes and ensure it starts with /
+		normalizedPath := filepath.ToSlash(absPath)
+		if !strings.HasPrefix(normalizedPath, "/") {
+			normalizedPath = "/" + normalizedPath
+		}
+
 		newEntry := models.ExtensionIndexEntry{
 			Identifier: models.ExtensionIdentifier{
 				ID:   sourceEntry.Identifier.ID,
@@ -130,7 +141,7 @@ func syncToTarget(sourceProfile models.EditorProfile, sourceIndex []models.Exten
 			RelativeLocation: sourceEntry.RelativeLocation,
 			Location: models.ExtensionLocation{
 				Mid:    1,
-				Path:   "/" + strings.ReplaceAll(targetFolderPath, "\\", "/"),
+				Path:   normalizedPath,
 				Scheme: "file",
 			},
 			Metadata: sourceEntry.Metadata,
