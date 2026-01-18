@@ -69,6 +69,10 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref }}
 
+      - name: Make release scripts executable
+        run: chmod +x scripts/release/*.sh
+        shell: bash
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -110,68 +114,27 @@ jobs:
       # Build application
       - name: Build Wails app
         run: |
-          if [ "${{ runner.os }}" == "Windows" ] && [ "${{ matrix.config.installer }}" == "true" ]; then
-            wails build -nsis -platform ${{ matrix.config.platform }} -o ${{ matrix.config.output }}${{ matrix.config.ext }}
-          else
-            wails build -platform ${{ matrix.config.platform }} -o ${{ matrix.config.output }}${{ matrix.config.ext }}
-          fi
+          bash scripts/release/build_wails.sh \
+            "${{ matrix.config.platform }}" \
+            "${{ matrix.config.output }}" \
+            "${{ matrix.config.ext }}" \
+            "${{ matrix.config.installer }}"
         shell: bash
 
       # Build CLI binary separately
       - name: Build CLI binary
         run: |
-          GOOS=$(echo ${{ matrix.config.platform }} | cut -d'/' -f1)
-          GOARCH=$(echo ${{ matrix.config.platform }} | cut -d'/' -f2)
-          echo "Building CLI for $GOOS/$GOARCH"
-          GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=0 go build -o build/bin/vsynx${{ matrix.config.ext }} -ldflags="-s -w" .
+          bash scripts/release/build_cli.sh \
+            "${{ matrix.config.platform }}" \
+            "${{ matrix.config.ext }}"
         shell: bash
 
       # Package macOS DMG
       - name: Create DMG (macOS)
         if: runner.os == 'macOS'
         run: |
-          cd build/bin
-          echo "=== DEBUG: build/bin contents ==="
-          ls -R
-
-          echo "=== Preparing Vsynx Manager.app ==="
-          # Cleanup any existing directory to prevent 'mv' moving into it
-          rm -rf "Vsynx Manager.app"
-
-          # Find the app bundle produced by Wails. Support various possible names.
-          APP_BUNDLE=$(ls -1d *.app 2>/dev/null | head -n 1)
-          if [ -z "$APP_BUNDLE" ]; then
-            echo "ERROR: No .app bundle found in build/bin"
-            exit 1
-          fi
-
-          echo "Found app bundle: $APP_BUNDLE"
-          if [ "$APP_BUNDLE" != "Vsynx Manager.app" ]; then
-            mv "$APP_BUNDLE" "Vsynx Manager.app"
-          fi
-
-          # Ad-hoc code sign to prevent "damaged" errors
-          echo "=== Ad-hoc signing ==="
-          codesign --force --deep --sign - "Vsynx Manager.app"
-
-          # Create DMG
-          echo "=== Creating DMG ==="
-          ICON_ARG=""
-          if [ -f "../../build/appicon.icns" ]; then
-            ICON_ARG="--volicon ../../build/appicon.icns"
-          fi
-
-          create-dmg \
-            --volname "Vsynx Manager" \
-            $ICON_ARG \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --icon "Vsynx Manager.app" 200 190 \
-            --hide-extension "Vsynx Manager.app" \
-            --app-drop-link 600 185 \
-            "${{ matrix.config.output }}.dmg" \
-            "Vsynx Manager.app"
+          bash scripts/release/create_dmg_macos.sh "${{ matrix.config.output }}"
+        shell: bash
 
       # Prepare Windows Installer for Upload
       - name: Prepare Windows Installer
